@@ -1,0 +1,70 @@
+Metadata-Version: 2.4
+Name: llm-security-lab
+Version: 0.1.0
+Summary: LLM prompt-injection security testing platform with clean architecture and feature-first design.
+Author: LLM Security Lab Team
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: PyQt6>=6.6
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: pydantic>=2.7
+Requires-Dist: requests>=2.31
+Requires-Dist: rich>=13.7
+Requires-Dist: tabulate>=0.9
+Requires-Dist: python-dateutil>=2.8
+Requires-Dist: typing-extensions>=4.11
+Provides-Extra: dev
+Requires-Dist: pytest>=8.2; extra == "dev"
+Requires-Dist: pytest-qt>=4.3; extra == "dev"
+Requires-Dist: mypy>=1.10; extra == "dev"
+Requires-Dist: black>=24.4; extra == "dev"
+Requires-Dist: ruff>=0.5; extra == "dev"
+Requires-Dist: types-PyYAML; extra == "dev"
+Requires-Dist: types-requests; extra == "dev"
+
+# LLMSecurity Lab
+
+Платформа для тестирования устойчивости LLM к prompt-инъекциям. Проект построен по принципам Clean Architecture и feature-first: каждая ключевая функциональность оформлена как самостоятельный модуль со своими доменными сущностями, use-case слоями и инфраструктурой.
+
+## Ключевые возможности
+- Конвейер защит (Defense Pipeline) с независимыми слоями L1-L9 и YAML-профилями.
+- Тест-раннер с A/B-прогонами (без защит и с выбранным профилем), сбором метрик и артефактов.
+- PyQt GUI с панелью защиты, сводкой результатов и фильтрами по сработавшим слоям.
+- Экспорт отчётов (CSV/JSON/HTML) и сохранение логов для аудита.
+
+## Структура каталога
+```
+src/llm_security
+├── core                # общие сервисы (конфиги, логирование, сериализация)
+├── shared              # переиспользуемые утилиты и типы
+└── features            # feature-first модули
+    ├── defense         # конвейер защит L1-L9
+    ├── models          # абстракции клиентов LLM (OpenRouter, локальные)
+    ├── testing         # тесты prompt-инъекций, раннер и оценка
+    ├── reporting       # экспорт результатов в CSV/JSON/HTML
+    └── ui              # PyQt-приложение и интеракция
+```
+
+Конфигурация профилей `config/profiles.yaml`, политики `config/policy.yaml`, сценарии тестов `data/prompt_tests.yaml`.
+
+## Быстрый старт
+```bash
+python -m venv .venv
+.venv\\Scripts\\activate
+pip install -e .
+
+# CLI прогон тестов
+llm-security-cli run --model dummy --profile strict_demo
+
+# Запуск GUI
+llm-security-ui
+```
+
+> Для работы GUI установите PyQt6: `pip install PyQt6`.
+
+## Развитие
+- Добавляйте новые слои защиты как реализации `IDefenseLayer`.
+- Расширяйте каталог тестов, пополняя `data/prompt_tests.yaml`.
+- Подключайте реальные LLM через `features.models.infrastructure`.
+- Используйте A/B-метрики для демонстрации эффекта защит.

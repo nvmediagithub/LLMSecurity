@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-security-lab"
+version = "0.1.0"
+description = "LLM prompt-injection security testing platform with clean architecture and feature-first design."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "LLM Security Lab Team" }
+]
+
+dependencies = [
+    "PyQt6>=6.6",
+    "PyYAML>=6.0",
+    "pydantic>=2.7",
+    "requests>=2.31",
+    "rich>=13.7",
+    "tabulate>=0.9",
+    "python-dateutil>=2.8",
+    "typing-extensions>=4.11"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-qt>=4.3",
+    "mypy>=1.10",
+    "black>=24.4",
+    "ruff>=0.5",
+    "types-PyYAML",
+    "types-requests"
+]
+
+[project.scripts]
+llm-security-ui = "llm_security.features.ui.presentation.main:run"
+llm-security-cli = "llm_security.cli:main"
+

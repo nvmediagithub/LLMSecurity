@@ -1,0 +1,45 @@
+profiles:
+  strict_demo:
+    title: "Strict Demo"
+    description: "Максимально жёсткий профиль для публичных демонстраций."
+    enabled_layers:
+      - L1
+      - L2
+      - L3
+      - L4
+      - L5
+      - L6
+      - L7
+      - L8
+    params:
+      L2:
+        classifier: "llama_guard_2"
+        threshold: 0.55
+        block_keywords:
+          - "игнорируй"
+          - "раскрой"
+      L3:
+        strip_html: true
+        remove_hidden_css: true
+        allow_domains: []
+      L4:
+        deny_roles: ["DAN", "grandma", "ignore previous instructions"]
+        deny_capabilities: ["reveal_system_prompt", "execute_malicious"]
+      L6:
+        entropy_threshold: 4.0
+      L7:
+        categories_block: ["illicit_behavior", "privacy", "violent"]
+  research:
+    title: "Research"
+    description: "Минимально инвазивный профиль для анализа поведения моделей."
+    enabled_layers:
+      - L1
+      - L3
+      - L4
+      - L7
+    params: {}
+  custom:
+    title: "Custom"
+    description: "Пользовательский профиль. Настраивается из UI."
+    enabled_layers: []
+    params: {}

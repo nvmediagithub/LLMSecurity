@@ -1,0 +1,20 @@
+policy:
+  forbid_role_change: true
+  forbidden_roles:
+    - "DAN"
+    - "Hacker"
+    - "Exploit"
+  forbid_system_prompt_leak: true
+  forbid_direct_harm:
+    - "explosives"
+    - "malware"
+    - "passwords"
+    - "financial_fraud"
+  allow_domains:
+    - "trusted.example.com"
+  data_marking: "DATA_ONLY"
+  escalation_keywords:
+    - "override"
+    - "sudo"
+    - "root access"
+
