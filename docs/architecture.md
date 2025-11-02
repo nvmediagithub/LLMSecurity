@@ -46,11 +46,20 @@ Each feature keeps the same internal layering:
 
 - `UISuiteController` bridges the PyQt layer with `TestSuiteService`.
 - `MainWindow` implements profile selection, category filters, A/B toggles, and result tables.
+- `ConnectionManagementDialog` provides CRUD interface for LLM connections with validation.
 - Entry point `llm-security-ui` launches the GUI.
+
+## Models (LLM Connections)
+
+- Domain entities: `ConnectionConfig` (full config), `ConnectionInfo` (summary).
+- Application service: `ModelConnectionService` handles CRUD, client caching, authentication resolution.
+- Infrastructure: `ModelConnectionRepository` persists configs to YAML, with hydration/serialization.
+- Supported providers: `DummyModelClient`, `OpenRouterModelClient` (extensible).
+- Configuration stored in `config/llm_connections.yaml`, secrets via env vars.
 
 ## Additional Notes
 
 - CLI (`llm-security-cli`) provides scripted execution and report exports.
 - `DummyModelClient` simulates a vulnerable LLM for offline demos.
 - Real integrations (e.g., `OpenRouterModelClient`) can be enabled by supplying API credentials; additional guard models can be plugged into L2/L7.
-
+- LLM connection settings live in `config/llm_connections.yaml` and are resolved via `ModelConnectionService`, keeping secrets in environment variables and supporting per-environment profiles.

@@ -5,6 +5,7 @@ from typing import Iterable, List, Optional, Set
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QApplication,
+    QComboBox,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -20,9 +21,10 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from ...testing.application.service import ABTestResult, TestSuiteResult
+from ...testing.application.service import TestSuiteResult
 from ...testing.domain.models import PromptTest
 from ..application.controller import UISuiteController
+from .connection_management_dialog import ConnectionManagementDialog
 
 
 class MainWindow(QMainWindow):
@@ -34,13 +36,14 @@ class MainWindow(QMainWindow):
         self.data = self.controller.load_initial_data()
 
         self.setWindowTitle("LLM Security Lab")
-        self.resize(1100, 720)
+        self.resize(1150, 760)
 
         self.profile_combo = self._build_profile_combo()
+        self.connection_combo = self._build_connection_combo()
         self.tests_table = self._build_tests_table(self.data.tests)
         self.categories_list = self._build_categories_list(self.data.tests)
         self.results_table = self._build_results_table()
-        self.metrics_label = QLabel("—")
+        self.metrics_label = QLabel("-")
         self.delta_label = QLabel("")
 
         self.run_button = QPushButton("Запустить профиль")
@@ -49,8 +52,12 @@ class MainWindow(QMainWindow):
         self.ab_button = QPushButton("A/B прогон")
         self.ab_button.clicked.connect(self._on_ab_clicked)  # type: ignore[arg-type]
 
+        self.manage_connections_button = QPushButton("Управление подключениями")
+        self.manage_connections_button.clicked.connect(self._on_manage_connections_clicked)  # type: ignore[arg-type]
+
         self._compose_layout()
 
+    # region UI builders
     def _compose_layout(self) -> None:
         central = QWidget()
         self.setCentralWidget(central)
@@ -62,8 +69,11 @@ class MainWindow(QMainWindow):
         controls_box.setLayout(controls_layout)
         controls_layout.addWidget(QLabel("Профиль:"))
         controls_layout.addWidget(self.profile_combo)
+        controls_layout.addWidget(QLabel("Подключение:"))
+        controls_layout.addWidget(self.connection_combo)
         controls_layout.addWidget(self.run_button)
         controls_layout.addWidget(self.ab_button)
+        controls_layout.addWidget(self.manage_connections_button)
         controls_layout.addStretch()
         controls_layout.addWidget(self.metrics_label)
         controls_layout.addWidget(self.delta_label)
@@ -92,18 +102,26 @@ class MainWindow(QMainWindow):
         root_layout.addWidget(controls_box)
         root_layout.addLayout(split_layout)
 
-    def _build_profile_combo(self):
-        from PyQt6.QtWidgets import QComboBox
-
+    def _build_profile_combo(self) -> QComboBox:
         combo = QComboBox()
         for profile in self.data.profiles:
             combo.addItem(profile)
         return combo
 
+    def _build_connection_combo(self) -> QComboBox:
+        combo = QComboBox()
+        if not self.data.connections:
+            combo.addItem("dummy (fallback)", userData="dummy")
+            return combo
+        for connection in self.data.connections:
+            label = f"{connection.id} ({connection.provider})"
+            combo.addItem(label, userData=connection.id)
+        return combo
+
     def _build_tests_table(self, tests: List[PromptTest]) -> QTableWidget:
         table = QTableWidget()
         table.setColumnCount(4)
-        table.setHorizontalHeaderLabels(["ID", "Категория", "Severity", "Описание"])
+        table.setHorizontalHeaderLabels(["ID", "Категория", "Severity", "Название"])
         table.setRowCount(len(tests))
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         table.setSelectionMode(QTableWidget.SelectionMode.MultiSelection)
@@ -129,18 +147,27 @@ class MainWindow(QMainWindow):
     def _build_results_table(self) -> QTableWidget:
         table = QTableWidget()
         table.setColumnCount(5)
-        table.setHorizontalHeaderLabels(["ID", "Категория", "Статус", "Защита", "Причина"])
+        table.setHorizontalHeaderLabels(["ID", "Категория", "Статус", "Решение защиты", "Причина"])
         table.verticalHeader().setVisible(False)
         table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         return table
 
+    # endregion
+
+    # region handlers
     def _on_run_clicked(self) -> None:
         profile_id = self.profile_combo.currentText()
         tests = self._selected_test_ids()
         categories = self._selected_categories()
+        connection_id = self._selected_connection_id()
         try:
-            result = self.controller.run_suite(profile_id, categories=categories, test_ids=tests)
+            result = self.controller.run_suite(
+                profile_id,
+                categories=categories,
+                test_ids=tests,
+                connection_id=connection_id,
+            )
             self._display_suite(result)
             self.delta_label.setText("")
         except Exception as exc:  # pragma: no cover - UI handler
@@ -150,13 +177,28 @@ class MainWindow(QMainWindow):
         profile_id = self.profile_combo.currentText()
         tests = self._selected_test_ids()
         categories = self._selected_categories()
+        connection_id = self._selected_connection_id()
         try:
-            result = self.controller.run_ab(profile_id, categories=categories, test_ids=tests)
+            result = self.controller.run_ab(
+                profile_id,
+                categories=categories,
+                test_ids=tests,
+                connection_id=connection_id,
+            )
             self._display_suite(result.protected)
-            self.delta_label.setText(f"Δ Pass%: {result.delta_pass_rate}")
+            self.delta_label.setText(f"Delta Pass%: {result.delta_pass_rate}")
         except Exception as exc:  # pragma: no cover
             QMessageBox.critical(self, "Ошибка", str(exc))
 
+    def _on_manage_connections_clicked(self) -> None:
+        dialog = ConnectionManagementDialog(parent=self)
+        dialog.exec()
+        # Обновляем список подключений в комбо-боксе после изменений
+        self._refresh_connections_combo()
+
+    # endregion
+
+    # region helpers
     def _display_suite(self, suite: TestSuiteResult) -> None:
         runs = suite.runs
         self.results_table.setRowCount(len(runs))
@@ -171,7 +213,7 @@ class MainWindow(QMainWindow):
         self.metrics_label.setText(f"Pass%: {suite.metrics.pass_rate} ({suite.metrics.passed}/{suite.metrics.total})")
 
     def _selected_categories(self) -> List[str]:
-        categories = []
+        categories: List[str] = []
         for idx in range(self.categories_list.count()):
             item = self.categories_list.item(idx)
             if item.checkState() == Qt.CheckState.Checked:
@@ -179,13 +221,36 @@ class MainWindow(QMainWindow):
         return categories
 
     def _selected_test_ids(self) -> List[str]:
-        selected_rows = {idx.row() for idx in self.tests_table.selectionModel().selectedRows()}
-        ids = []
-        for row in selected_rows:
+        selection = self.tests_table.selectionModel()
+        if not selection:
+            return []
+        rows = {idx.row() for idx in selection.selectedRows()}
+        ids: List[str] = []
+        for row in rows:
             item = self.tests_table.item(row, 0)
             if item:
                 ids.append(item.text())
         return ids
+
+    def _selected_connection_id(self) -> Optional[str]:
+        idx = self.connection_combo.currentIndex()
+        if idx < 0:
+            return None
+        value = self.connection_combo.itemData(idx)
+        return value if isinstance(value, str) else None
+
+    def _refresh_connections_combo(self) -> None:
+        """Обновляет список подключений в комбо-боксе."""
+        self.data = self.controller.load_initial_data()  # Перезагружаем данные
+        self.connection_combo.clear()
+        if not self.data.connections:
+            self.connection_combo.addItem("dummy (fallback)", userData="dummy")
+            return
+        for connection in self.data.connections:
+            label = f"{connection.id} ({connection.provider})"
+            self.connection_combo.addItem(label, userData=connection.id)
+
+    # endregion
 
 
 def launch_app() -> None:  # pragma: no cover - GUI entrypoint
@@ -202,3 +267,4 @@ def launch_app() -> None:  # pragma: no cover - GUI entrypoint
         sys.exit(app.exec())
     else:
         app.exec()
+

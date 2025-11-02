@@ -31,9 +31,12 @@ src/llm_security/features/defense/infrastructure/layers/l8_memory_guard.py
 src/llm_security/features/defense/infrastructure/layers/l9_rate_scope_guard.py
 src/llm_security/features/models/__init__.py
 src/llm_security/features/models/application/__init__.py
+src/llm_security/features/models/application/connection_service.py
 src/llm_security/features/models/domain/__init__.py
+src/llm_security/features/models/domain/connection.py
 src/llm_security/features/models/domain/interfaces.py
 src/llm_security/features/models/infrastructure/__init__.py
+src/llm_security/features/models/infrastructure/connections_repository.py
 src/llm_security/features/models/infrastructure/dummy.py
 src/llm_security/features/models/infrastructure/openrouter.py
 src/llm_security/features/reporting/__init__.py
@@ -61,6 +64,7 @@ src/llm_security/features/ui/application/__init__.py
 src/llm_security/features/ui/application/controller.py
 src/llm_security/features/ui/infrastructure/__init__.py
 src/llm_security/features/ui/presentation/__init__.py
+src/llm_security/features/ui/presentation/connection_management_dialog.py
 src/llm_security/features/ui/presentation/main.py
 src/llm_security/features/ui/presentation/main_window.py
 src/llm_security/resources/__init__.py
@@ -71,3 +75,11 @@ src/llm_security_lab.egg-info/dependency_links.txt
 src/llm_security_lab.egg-info/entry_points.txt
 src/llm_security_lab.egg-info/requires.txt
 src/llm_security_lab.egg-info/top_level.txt
+tests/test_core_config.py
+tests/test_defense.py
+tests/test_models_application.py
+tests/test_models_domain.py
+tests/test_models_infrastructure.py
+tests/test_reporting.py
+tests/test_testing.py
+tests/test_ui_connection_dialog.py

@@ -7,8 +7,11 @@ from ....core.config.loader import ConfigLoader
 from ...defense.application.profiles_service import ProfileRepository
 from ...defense.domain.profile import DefenseProfile
 from ...defense.infrastructure.factory import DefensePipelineBuilder
+from ...models.application.connection_service import ModelConnectionService
+from ...models.domain.connection import ConnectionInfo
 from ...models.domain.interfaces import ModelClient
 from ...models.infrastructure.dummy import DummyModelClient
+from ...models.infrastructure.connections_repository import ModelConnectionRepository
 from ...reporting.application.aggregator import MetricsAggregator, MetricsSummary
 from ..domain.models import PromptTest
 from ..domain.results import TestRunResult
@@ -42,13 +45,16 @@ class TestSuiteService:
         *,
         config_loader: ConfigLoader | None = None,
         model_client: ModelClient | None = None,
+        default_connection: str | None = None,
     ):
         self._loader = config_loader or ConfigLoader()
-        self._model_client = model_client or DummyModelClient()
+        self._model_client_override = model_client
+        self._default_connection = default_connection
         self._tests_repo = PromptTestRepository(self._loader)
         self._profiles_repo = ProfileRepository(self._loader)
         self._pipeline_builder = DefensePipelineBuilder(self._loader)
         self._evaluator = OutputEvaluator()
+        self._connection_service = ModelConnectionService(ModelConnectionRepository(self._loader))
 
     def list_tests(self) -> List[PromptTest]:
         return list(self._tests_repo.tests())
@@ -56,17 +62,22 @@ class TestSuiteService:
     def list_profiles(self) -> List[DefenseProfile]:
         return list(self._profiles_repo.load_all().values())
 
+    def list_connections(self) -> List[ConnectionInfo]:
+        return self._connection_service.list_connections()
+
     def run_suite(
         self,
         profile_id: str,
         *,
         categories: Optional[Iterable[str]] = None,
         test_ids: Optional[Iterable[str]] = None,
+        connection_id: Optional[str] = None,
     ) -> TestSuiteResult:
         profile = self._profiles_repo.get(profile_id)
         pipeline_builder = self._pipeline_builder
+        model_client = self._resolve_model_client(connection_id)
         runner = TestRunner(
-            model_client=self._model_client,
+            model_client=model_client,
             evaluator=self._evaluator,
             pipeline_factory=lambda p: pipeline_builder.build(p),
         )
@@ -76,12 +87,18 @@ class TestSuiteService:
         metrics = MetricsAggregator().summarize(runs)
         return TestSuiteResult(profile=profile, runs=runs, metrics=metrics)
 
-    def run_baseline(self, *, categories: Optional[Iterable[str]] = None) -> TestSuiteResult:
+    def run_baseline(
+        self,
+        *,
+        categories: Optional[Iterable[str]] = None,
+        connection_id: Optional[str] = None,
+    ) -> TestSuiteResult:
         tests = self._select_tests(categories=categories)
         baseline_profile = DefenseProfile(id="baseline", title="Baseline", description="No defenses", enabled_layers=[], params={})
         pipeline_builder = self._pipeline_builder
+        model_client = self._resolve_model_client(connection_id)
         runner = TestRunner(
-            model_client=self._model_client,
+            model_client=model_client,
             evaluator=self._evaluator,
             pipeline_factory=lambda p: pipeline_builder.build(p),
         )
@@ -95,9 +112,10 @@ class TestSuiteService:
         *,
         categories: Optional[Iterable[str]] = None,
         test_ids: Optional[Iterable[str]] = None,
+        connection_id: Optional[str] = None,
     ) -> ABTestResult:
-        baseline = self.run_baseline(categories=categories)
-        protected = self.run_suite(profile_id, categories=categories, test_ids=test_ids)
+        baseline = self.run_baseline(categories=categories, connection_id=connection_id)
+        protected = self.run_suite(profile_id, categories=categories, test_ids=test_ids, connection_id=connection_id)
         return ABTestResult(baseline=baseline, protected=protected)
 
     def _select_tests(
@@ -114,3 +132,13 @@ class TestSuiteService:
             wanted_cats = set(categories)
             tests = [test for test in tests if test.category in wanted_cats]
         return tests
+
+    def _resolve_model_client(self, connection_id: Optional[str]) -> ModelClient:
+        if self._model_client_override and connection_id is None:
+            return self._model_client_override
+        target_connection = connection_id or self._default_connection
+        if target_connection is None and self._model_client_override:
+            return self._model_client_override
+        if target_connection is None:
+            return DummyModelClient()
+        return self._connection_service.create_client(target_connection)

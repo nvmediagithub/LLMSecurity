@@ -25,46 +25,60 @@ Requires-Dist: types-requests; extra == "dev"
 
 # LLMSecurity Lab
 
-Платформа для тестирования устойчивости LLM к prompt-инъекциям. Проект построен по принципам Clean Architecture и feature-first: каждая ключевая функциональность оформлена как самостоятельный модуль со своими доменными сущностями, use-case слоями и инфраструктурой.
+LLMSecurity Lab is a clean-architecture, feature-first platform for testing the resilience of LLMs against prompt-injection attacks. It automates test execution, applies defense-in-depth pipelines, and visualises results via CLI and PyQt UI.
 
-## Ключевые возможности
-- Конвейер защит (Defense Pipeline) с независимыми слоями L1-L9 и YAML-профилями.
-- Тест-раннер с A/B-прогонами (без защит и с выбранным профилем), сбором метрик и артефактов.
-- PyQt GUI с панелью защиты, сводкой результатов и фильтрами по сработавшим слоям.
-- Экспорт отчётов (CSV/JSON/HTML) и сохранение логов для аудита.
+## Highlights
+- **Defense Pipeline** – nine modular layers (L1–L9) configured via YAML profiles.
+- **Test Runner & A/B mode** – compare behaviour with and without protections, collect rich metrics.
+- **Multiple model connections** – switch between dummy/local clients and remote providers (OpenRouter) through declarative settings.
+- **Reporting** – export CSV/JSON/HTML summaries, including layer contribution and false positives.
+- **PyQt UI** – researcher/demo friendly dashboard with live status, filters, and A/B toggles.
 
-## Структура каталога
+## Project Layout
 ```
 src/llm_security
-├── core                # общие сервисы (конфиги, логирование, сериализация)
-├── shared              # переиспользуемые утилиты и типы
-└── features            # feature-first модули
-    ├── defense         # конвейер защит L1-L9
-    ├── models          # абстракции клиентов LLM (OpenRouter, локальные)
-    ├── testing         # тесты prompt-инъекций, раннер и оценка
-    ├── reporting       # экспорт результатов в CSV/JSON/HTML
-    └── ui              # PyQt-приложение и интеракция
+├── core/                # shared services (config loader)
+├── shared/              # reserved for common helpers
+└── features/            # feature-first modules
+    ├── defense/         # Defense Pipeline (L1–L9)
+    ├── models/          # model clients & connection service
+    ├── testing/         # prompt tests, runner, evaluator
+    ├── reporting/       # metrics aggregator and exporters
+    └── ui/              # PyQt presentation layer
 ```
 
-Конфигурация профилей `config/profiles.yaml`, политики `config/policy.yaml`, сценарии тестов `data/prompt_tests.yaml`.
+Key configuration files:
+- `config/profiles.yaml` – defense profiles.
+- `config/policy.yaml` – policy rules for L4.
+- `config/llm_connections.yaml` – LLM connection settings (provider, auth via env vars).
+- `data/prompt_tests.yaml` – prompt-injection scenarios and control tests.
 
-## Быстрый старт
+## Quick Start
 ```bash
 python -m venv .venv
-.venv\\Scripts\\activate
+.venv\Scripts\activate
 pip install -e .
 
-# CLI прогон тестов
-llm-security-cli run --model dummy --profile strict_demo
+# List available LLM connections
+llm-security-cli connections
 
-# Запуск GUI
+# Run tests with a profile/connection
+llm-security-cli run --profile strict_demo --connection dummy
+
+# Launch the PyQt UI
 llm-security-ui
 ```
 
-> Для работы GUI установите PyQt6: `pip install PyQt6`.
+> Install PyQt6 for the GUI component: `pip install PyQt6`.
 
-## Развитие
-- Добавляйте новые слои защиты как реализации `IDefenseLayer`.
-- Расширяйте каталог тестов, пополняя `data/prompt_tests.yaml`.
-- Подключайте реальные LLM через `features.models.infrastructure`.
-- Используйте A/B-метрики для демонстрации эффекта защит.
+## Documentation
+- Architecture overview: `docs/architecture.md`
+- Requirements summary (DOC1/DOC2): `docs/requirements_summary.md`
+- Agent policy & safety guardrails: `AGENTS.md`
+- Feature guides: `docs/features/*.md`
+
+## Roadmap Ideas
+1. Wire in production guard models (OpenAI Moderation, Llama Guard) for L2/L7.
+2. Extend connection service with additional providers (Azure OpenAI, local backends).
+3. Enrich UI with layer-level drill-down and report export buttons.
+

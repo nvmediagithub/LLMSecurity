@@ -26,7 +26,7 @@
 | Test Runner | orchestration | `TestSuiteService`, `TestRunner` | Останавливает тест и логирует ошибку, отдает статус FAIL |
 | Defense Pipeline | безопасность | `IDefenseLayer`, `DefensePipeline` | Возвращает `BLOCK`/`REWRITE`/`ESCALATE` с причинами |
 | Model Client | интеграция | `ModelClient` | Пробрасывает исключения сети, чтобы Test Runner мог зафиксировать ошибку |
-| UI Agent | оператор | `UISuiteController` | Показывает ошибки пользователю и предлагает повторный запуск |
+| UI Agent | оператор | `UISuiteController`, `ConnectionManagementDialog` | Показывает ошибки пользователю и предлагает повторный запуск; управляет подключениями к LLM через CRUD-интерфейс, обеспечивая безопасную настройку и валидацию |
 
 ## 4. Жизненный цикл взаимодействия
 1. UI/CLI формирует `PromptBundle`.

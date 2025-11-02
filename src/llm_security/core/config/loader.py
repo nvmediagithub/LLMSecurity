@@ -15,6 +15,7 @@ class ConfigPaths:
     profiles: Path
     policy: Path
     tests: Path
+    connections: Path
 
     @classmethod
     def default(cls, root: Path | None = None) -> "ConfigPaths":
@@ -23,6 +24,7 @@ class ConfigPaths:
             profiles=root / "config" / "profiles.yaml",
             policy=root / "config" / "policy.yaml",
             tests=root / "data" / "prompt_tests.yaml",
+            connections=root / "config" / "llm_connections.yaml",
         )
 
 
@@ -48,9 +50,25 @@ class ConfigLoader:
             return self._load_json("tests", self._paths.tests)
         raise ValueError(f"Unsupported tests format: {suffix}")
 
+    def load_connections(self) -> Mapping[str, Any]:
+        return self._load_optional_yaml("connections", self._paths.connections)
+
+    def save_connections(self, data: Mapping[str, Any]) -> None:
+        """Сохраняет конфигурацию подключений в YAML."""
+        self._write_yaml(self._paths.connections, data)
+        self._cache["connections"] = dict(data)
+
     def _load_yaml(self, key: str, path: Path) -> Mapping[str, Any]:
         if key not in self._cache:
             self._cache[key] = self._read_yaml(path)
+        return self._cache[key]
+
+    def _load_optional_yaml(self, key: str, path: Path) -> Mapping[str, Any]:
+        if key not in self._cache:
+            if not path.exists():
+                self._cache[key] = {}
+            else:
+                self._cache[key] = self._read_yaml(path)
         return self._cache[key]
 
     def _load_json(self, key: str, path: Path) -> Mapping[str, Any]:
@@ -65,6 +83,13 @@ class ConfigLoader:
         if not isinstance(data, Mapping):
             raise TypeError(f"YAML root must be a mapping: {path}")
         return data
+
+    @staticmethod
+    def _write_yaml(path: Path, data: Mapping[str, Any]) -> None:
+        """Записывает данные в YAML файл."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as fh:
+            yaml.safe_dump(data, fh, default_flow_style=False, allow_unicode=True)
 
     @staticmethod
     def _read_json(path: Path) -> Mapping[str, Any]:
@@ -82,4 +107,3 @@ class ConfigLoader:
             return
         for key in keys:
             self._cache.pop(key, None)
-
