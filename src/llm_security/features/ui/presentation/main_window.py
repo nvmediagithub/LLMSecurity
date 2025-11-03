@@ -25,6 +25,8 @@ from ...testing.application.service import TestSuiteResult
 from ...testing.domain.models import PromptTest
 from ..application.controller import UISuiteController
 from .connection_management_dialog import ConnectionManagementDialog
+from .l1_layer_management_dialog import L1LayerManagementDialog
+from .l1_attack_simulation_dialog import L1AttackSimulationDialog
 
 
 class MainWindow(QMainWindow):
@@ -55,6 +57,12 @@ class MainWindow(QMainWindow):
         self.manage_connections_button = QPushButton("Управление подключениями")
         self.manage_connections_button.clicked.connect(self._on_manage_connections_clicked)  # type: ignore[arg-type]
 
+        self.manage_l1_button = QPushButton("Настройки L1")
+        self.manage_l1_button.clicked.connect(self._on_manage_l1_clicked)  # type: ignore[arg-type]
+
+        self.simulate_l1_button = QPushButton("Эмуляция L1 атак")
+        self.simulate_l1_button.clicked.connect(self._on_simulate_l1_clicked)  # type: ignore[arg-type]
+
         self._compose_layout()
 
     # region UI builders
@@ -74,6 +82,8 @@ class MainWindow(QMainWindow):
         controls_layout.addWidget(self.run_button)
         controls_layout.addWidget(self.ab_button)
         controls_layout.addWidget(self.manage_connections_button)
+        controls_layout.addWidget(self.manage_l1_button)
+        controls_layout.addWidget(self.simulate_l1_button)
         controls_layout.addStretch()
         controls_layout.addWidget(self.metrics_label)
         controls_layout.addWidget(self.delta_label)
@@ -195,6 +205,14 @@ class MainWindow(QMainWindow):
         dialog.exec()
         # Обновляем список подключений в комбо-боксе после изменений
         self._refresh_connections_combo()
+
+    def _on_manage_l1_clicked(self) -> None:
+        dialog = L1LayerManagementDialog(parent=self)
+        dialog.exec()
+
+    def _on_simulate_l1_clicked(self) -> None:
+        dialog = L1AttackSimulationDialog(parent=self)
+        dialog.exec()
 
     # endregion
 

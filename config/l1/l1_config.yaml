@@ -1,0 +1,9 @@
+max_length: 5000
+enabled_categories:
+  - injection
+  - normalization
+  - sanitization
+  - length_attack
+  - encoding_attack
+sanitize_zero_width: true
+normalize_unicode: true
