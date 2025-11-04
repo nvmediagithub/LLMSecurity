@@ -1,0 +1,257 @@
+# Python-specific patterns
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# IDE-specific patterns
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS-specific patterns
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+
+# Project-specific patterns
+# Logs
+*.log
+logs/
+*.log.*
+log.txt
+app.log
+error.log
+debug.log
+access.log
+
+# Caches
+.cache/
+.caches/
+*.cache
+temp/
+tmp/
+.tmp/
+temp
+tmp
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+analysis_results.db  # Specific to this project
+
+# Security and secrets
+# API keys, passwords, secrets
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+secrets/
+secrets.json
+secrets.yaml
+.env.local
+.env.production
+.env.staging
+.env.development
+config/secrets/
+config/keys/
+
+# Git
+.git/
+.gitignore.backup
+
+# Documentation build artifacts
+docs/build/
+docs/dist/
+
+# Node.js (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+.dockerignore
+
+# Miscellaneous
+*.lock
+*.pid
+*.seed
+*.pid.lock
+
+# Backup files
+*.backup
+*.bak
+*.orig
+*.rej
+
+# Compiled output
+*.out
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test artifacts
+.coverage/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Specific to LLMSecurity Lab
+# Model outputs or results that might contain sensitive data
+results/
+reports/
+output/
+artifacts/
+
+# User-specific configurations
+user_config/
+personal_settings.yaml

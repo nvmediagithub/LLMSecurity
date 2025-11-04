@@ -9,7 +9,7 @@ connections:
     timeout: null
   openrouter_qwen_demo:
     auth:
-      env_var: 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
+      env_var: YOUR_OPENROUTER_API_KEY_PLACEHOLDER
       type: env
     base_url: https://openrouter.ai/api/v1/chat/completions
     description: 'DeepSeek: R1 Distill Llama 70B (free)'

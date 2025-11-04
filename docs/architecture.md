@@ -1,5 +1,41 @@
 # Architecture Guide
 
+## Унифицированная архитектура: Clean Architecture + Feature First + Layers + Attacks + Analysis
+
+```
+src/llm_security
+├── core/                 # shared infrastructure (config loader, logging stubs)
+├── shared/               # reusable helpers (reserved)
+└── features/            # feature-first modules
+    ├── layers/           # унифицированная система слоев защиты
+    │   ├── domain/       # ILayer interface, LayerMetadata, LayerConfig
+    │   ├── application/  # LayerManager, LayerConfigService
+    │   └── infrastructure/ # LayerRegistry, LayerFactory, adapters
+    ├── attacks/          # система атак и эмуляторов
+    │   ├── domain/       # AttackDefinition, AttackResult, IAttackEmulator
+    │   ├── application/  # AttackExecutor, AttackManager
+    │   └── infrastructure/ # AttackFactory, repositories, adapters
+    ├── analysis/         # комплексный анализ результатов
+    │   ├── domain/       # AnalysisResult, UnifiedReport, metrics
+    │   ├── application/  # AnalysisService, ResultAnalyzer, ReportGenerator
+    │   └── infrastructure/ # report exporters (CSV/JSON/HTML)
+    ├── defense/          # Defense Pipeline (L1–L9)
+    ├── models/           # model clients (OpenRouter, dummy, etc.)
+    ├── testing/          # prompt-injection scenarios and runners
+    ├── reporting/        # metrics aggregation and exports
+    └── ui/               # PyQt presentation layer
+```
+
+Подробная документация по каждой фиче находится в `docs/features/*.md`.
+
+Каждая фича следует единой внутренней структуре Clean Architecture:
+
+- `domain` – entities и contracts (`Decision`, `PromptTest`, `PolicyRules`, `ILayer`, `AttackDefinition`).
+- `application` – use-case logic (`DefensePipeline`, `TestRunner`, `LayerManager`, `AttackExecutor`).
+- `infrastructure` – adapters (`PromptTestRepository`, `DummyModelClient`, implementations слоев, эмуляторы атак).
+- `presentation` – UI adapters (currently only the PyQt feature).
+
+## 
 ## Clean Architecture + Feature First
 
 ```
@@ -22,6 +58,29 @@ Each feature keeps the same internal layering:
 - `application` – use-case logic (`DefensePipeline`, `TestRunner`, `TestSuiteService`).
 - `infrastructure` – adapters (`PromptTestRepository`, `DummyModelClient`, layer implementations).
 - `presentation` – UI adapters (currently only the PyQt feature).
+
+## Layers (Унифицированная система слоев)
+
+- [`ILayer`](src/llm_security/features/layers/domain/interfaces.py:9) определяет унифицированный контракт для всех слоев защиты.
+- [`LayerManager`](src/llm_security/features/layers/application/layer_manager.py:11) управляет жизненным циклом и конфигурацией слоев.
+- [`LayerConfigService`](src/llm_security/features/layers/application/layer_config_service.py) обрабатывает конфигурации слоев из профилей.
+- [`LayerRegistry`](src/llm_security/features/layers/infrastructure/layer_registry.py) и [`LayerFactory`](src/llm_security/features/layers/infrastructure/layer_factory.py) обеспечивают плагинную архитектуру.
+- [`DefenseLayerAdapter`](src/llm_security/features/layers/infrastructure/defense_layer_adapter.py) адаптирует существующие слои L1-L9 к унифицированному интерфейсу.
+
+## Attacks (Система атак и эмуляторов)
+
+- [`AttackDefinition`](src/llm_security/features/attacks/domain/entities.py:27) описывает атаки с категориями и целевыми слоями.
+- [`AttackExecutor`](src/llm_security/features/attacks/application/attack_executor.py:14) выполняет атаки асинхронно.
+- [`AttackManager`](src/llm_security/features/attacks/application/attack_manager.py) координирует выполнение атак.
+- [`AttackFactory`](src/llm_security/features/attacks/infrastructure/attack_factory.py:10) создает эмуляторы и шаблоны атак.
+- Репозитории атак поддерживают индексацию по категориям и целевым слоям.
+
+## Analysis (Комплексный анализ)
+
+- [`AnalysisService`](src/llm_security/features/analysis/application/analysis_service.py:14) объединяет результаты тестов и атак.
+- [`ResultAnalyzer`](src/llm_security/features/analysis/application/result_analyzer.py:13) выявляет уязвимости и генерирует рекомендации.
+- [`MetricsCalculator`](src/llm_security/features/analysis/application/metrics_calculator.py) рассчитывает метрики по слоям и категориям атак.
+- Экспортеры отчетов ([`CSV`](src/llm_security/features/analysis/infrastructure/report_exporters.py:28), [`JSON`](src/llm_security/features/analysis/infrastructure/report_exporters.py:74), [`HTML`](src/llm_security/features/analysis/infrastructure/report_exporters.py:144)) поддерживают множественные форматы.
 
 ## Defense Pipeline
 

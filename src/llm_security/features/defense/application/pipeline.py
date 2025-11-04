@@ -5,6 +5,9 @@ from typing import Iterable, List, Sequence, Tuple
 
 from ..domain.entities import Decision, DefenseResult, PromptBundle
 from ..domain.interfaces import IDefenseLayer
+# Импорт новой системы слоев для обратной совместимости
+from ...layers.domain.interfaces import ILayer
+from ...layers.infrastructure.defense_layer_adapter import DefenseLayerAdapter
 
 
 @dataclass
@@ -17,8 +20,19 @@ class PipelineDecision:
 class DefensePipeline:
     """Оркестратор конвейера защит."""
 
-    def __init__(self, layers: Sequence[IDefenseLayer]):
-        self._layers = [layer for layer in layers if layer.enabled]
+    def __init__(self, layers: Sequence[IDefenseLayer | ILayer]):
+        # Адаптируем слои нового типа к старому интерфейсу
+        adapted_layers = []
+        for layer in layers:
+            if isinstance(layer, ILayer):
+                # Если слой уже адаптирован или является новым типом
+                adapted_layers.append(layer)
+            else:
+                # Адаптируем старый слой через адаптер
+                adapted_layer = DefenseLayerAdapter.create_from_defense_layer(layer)
+                adapted_layers.append(adapted_layer)
+
+        self._layers = [layer for layer in adapted_layers if layer.enabled]
 
     def guard_before(self, prompt_bundle: PromptBundle) -> PipelineDecision:
         logs: List[DefenseResult] = []
@@ -48,6 +62,6 @@ class DefensePipeline:
                 output = result.rewritten_text
         return PipelineDecision(Decision.ALLOW, output, logs)
 
-    def iter_layers(self) -> Iterable[IDefenseLayer]:
+    def iter_layers(self) -> Iterable[IDefenseLayer | ILayer]:
         return iter(self._layers)
 

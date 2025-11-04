@@ -49,4 +49,7 @@ addopts = [
     "--strict-config",
     "--disable-warnings"
 ]
+markers = [
+    "asyncio: marks tests as async (using pytest-asyncio)"
+]
 
